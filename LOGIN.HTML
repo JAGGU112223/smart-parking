@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Parking</title>
+    <link rel="stylesheet" href="STYLE.css">
+</head>
+<body>
+    <!-- Login Form -->
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p id="loginMessage"></p>
+        <p>Don't have an account? <a href="#" id="switchToSignUp">Sign Up</a></p>
+    </div>
+
+    <!-- Sign-Up Form (Hidden Initially) -->
+    <div class="signup-container" style="display: none;">
+        <h2>Sign Up</h2>
+        <form id="signUpForm">
+            <label for="newUsername">Username:</label>
+            <input type="text" id="newUsername" required>
+            <label for="newPassword">Password:</label>
+            <input type="password" id="newPassword" required>
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p id="signUpMessage"></p>
+        <p>Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+    </div>
+
+    <!-- Firebase Integration and Logic -->
+    <script type="module">
+        // Import Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+        // Firebase configuration
+       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+        apiKey: "AIzaSyDIQOSfaxPNZ3S-QWkdCwvsqFS17YSl75Q",
+        authDomain: "smartparking-83d14.firebaseapp.com",
+        databaseURL: "https://smartparking-83d14-default-rtdb.firebaseio.com",
+        projectId: "smartparking-83d14",
+        storageBucket: "smartparking-83d14.firebasestorage.app",
+        messagingSenderId: "7613741307",
+        appId: "1:7613741307:web:7bb54d907e5a9bf43fd85e",
+        measurementId: "G-7NGPT6ZZ6T"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Toggle between Login and Sign-Up
+        document.getElementById("switchToSignUp")?.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.querySelector(".login-container").style.display = "none";
+            document.querySelector(".signup-container").style.display = "block";
+        });
+
+        document.getElementById("switchToLogin")?.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.querySelector(".signup-container").style.display = "none";
+            document.querySelector(".login-container").style.display = "block";
+        });
+
+        // Sign-Up Functionality
+        document.getElementById("signUpForm")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const newUsername = document.getElementById("newUsername").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (newPassword !== confirmPassword) {
+                document.getElementById("signUpMessage").textContent = "Passwords do not match!";
+                return;
+            }
+
+            try {
+                const dbRef = ref(database);
+                const snapshot = await get(child(dbRef, `users/${newUsername}`));
+
+                if (snapshot.exists()) {
+                    document.getElementById("signUpMessage").textContent = "Username already exists!";
+                    return;
+                }
+
+                // Save the new user to Firebase
+                await set(ref(database, `users/${newUsername}`), {
+                    username: newUsername,
+                    password: newPassword
+                });
+
+                document.getElementById("signUpMessage").textContent = "Sign-Up Successful! Redirecting to login...";
+                
+                setTimeout(() => {
+                    document.querySelector(".signup-container").style.display = "none";
+                    document.querySelector(".login-container").style.display = "block";
+                    document.getElementById("signUpMessage").textContent = "";
+                }, 2000);
+            } catch (error) {
+                console.error("Error during sign-up:", error);
+                document.getElementById("signUpMessage").textContent = "Error during sign-up!";
+            }
+        });
+
+        // Login Functionality
+        document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const dbRef = ref(database);
+                const snapshot = await get(child(dbRef, `users/${username}`));
+
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    if (userData.password === password) {
+                        window.location.href = "slots.html"; // Redirect to slots page
+                    } else {
+                        document.getElementById("loginMessage").textContent = "Invalid username or password!";
+                    }
+                } else {
+                    document.getElementById("loginMessage").textContent = "Invalid username or password!";
+                }
+            } catch (error) {
+                console.error("Error during login:", error);
+                document.getElementById("loginMessage").textContent = "Error during login!";
+            }
+        });
+    </script>
+</body>
+</html>

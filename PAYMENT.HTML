@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Parking</title>
+    <link rel="stylesheet" href="STYLE.css">
+
+</head>
+<body>
+    <div class="payment-container">
+        <h2>Complete Your Payment</h2>
+        <form id="paymentForm">
+            <!-- Slot and Cost Info -->
+            <p>Slot: <span id="selectedSlot">A1</span></p>
+            <p>Total Cost: ₹<span id="totalCost">200</span></p>
+
+            <!-- Card Details Section -->
+            <label for="cardNumber">Card Number:</label>
+            <input type="text" id="cardNumber" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+
+            <div class="expiry-cvv">
+                <div class="expiry-container">
+                    <label for="expiryDate">Expiry Date (MM/YY):</label>
+                    <input type="text" id="expiryDate" placeholder="MM/YY" required>
+                </div>
+
+                <div class="cvv-container">
+                    <label for="cvv">CVV:</label>
+                    <input type="password" id="cvv" placeholder="XXX" required>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit">Confirm Booking</button>
+            <p id="errorMessage" class="error-message"></p>
+        </form>
+    </div>
+    
+    <script src="script.js"></script>
+      
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIQOSfaxPNZ3S-QWkdCwvsqFS17YSl75Q",
+            authDomain: "smartparking-83d14.firebaseapp.com",
+            databaseURL: "https://smartparking-83d14-default-rtdb.firebaseio.com",
+            projectId: "smartparking-83d14",
+            storageBucket: "smartparking-83d14.appspot.com",
+            messagingSenderId: "7613741307",
+            appId: "1:7613741307:web:7bb54d907e5a9bf43fd85e",
+            measurementId: "G-7NGPT6ZZ6T"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        document.getElementById('paymentForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Get form values
+            const cardNumber = document.getElementById('cardNumber').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const cvv = document.getElementById('cvv').value;
+            const selectedSlot = document.getElementById('selectedSlot').textContent;
+            const totalCost = document.getElementById('totalCost').textContent;
+
+            // Validate form fields (basic validation example)
+            if (!cardNumber || !expiryDate || !cvv) {
+                document.getElementById('errorMessage').textContent = "Please fill in all fields.";
+                return;
+            }
+
+            // Add a new document with a generated ID
+            try {
+                const paymentRef = ref(database, 'payments/' + new Date().toISOString());
+                await set(paymentRef, {
+                    cardNumber: cardNumber,
+                    expiryDate: expiryDate,
+                    cvv: cvv,
+                    slot: selectedSlot,
+                    cost: totalCost
+                });
+
+                document.getElementById('errorMessage').textContent = "Payment successful!";
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                document.getElementById('errorMessage').textContent = "Payment failed. Please try again.";
+            }
+        });
+    </script>
+
+
+</body>
+</html>
