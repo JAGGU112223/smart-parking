@@ -1,1 +1,4 @@
-jaga-dish.xyz
+Name: www
+Type: CNAME
+Value: JAGGU112223.github.io
+TTL: 30 min
